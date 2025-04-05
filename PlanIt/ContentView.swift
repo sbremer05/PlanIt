@@ -9,16 +9,30 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        ZStack(alignment: .bottom) {
+            TabView {
+                CalendarView()
+                    .tabItem {
+                        Label("Calendar", systemImage: "calendar")
+                    }
+                EventList()
+                    .tabItem {
+                        Label("Events", systemImage: "tray.full.fill")
+                    }
+            }
+            .toolbarBackground(Color(UIColor.systemGray5), for: .tabBar)
+            .toolbarBackgroundVisibility(.visible, for: .tabBar)
+
+            Rectangle()
+                .fill(Color(UIColor.systemGray3))
+                .frame(height: 1)
+                .edgesIgnoringSafeArea(.bottom)
+                .offset(y: -49)
         }
-        .padding()
     }
 }
 
 #Preview {
     ContentView()
+        .modelContainer(SampleData.shared.modelContainer)
 }

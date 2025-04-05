@@ -13,5 +13,6 @@ struct PlanItApp: App {
         WindowGroup {
             ContentView()
         }
+        .modelContainer(for: [Event.self])
     }
 }
