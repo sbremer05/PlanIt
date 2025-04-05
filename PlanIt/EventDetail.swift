@@ -19,6 +19,10 @@ struct EventDetail: View {
     
     private let repeatUnits = ["days", "weeks", "months", "years"]
     
+    @State private var repeatEnds: Bool = false
+    
+    @State private var showEmptyNameAlert = false
+    
     init(event: Event, isNew: Bool = false) {
         self.event = event
         self.isNew = isNew
@@ -29,11 +33,6 @@ struct EventDetail: View {
             TextField("Event Name", text: $event.name)
             
             DatePicker("Event Date", selection: $event.date, in: Date.now..., displayedComponents: .date)
-            
-            TextField("Location", text: Binding(
-                get: { event.location ?? "" },
-                set: { event.location = $0.isEmpty ? nil : $0 }
-            ))
             
             Toggle("Repeats", isOn: $event.repeats)
             
@@ -61,27 +60,58 @@ struct EventDetail: View {
                     .frame(width: 100)
                     .clipped()
                     .onChange(of: repeatUnit) { _, newValue in
-                        // Ensure count is within valid range when unit changes
                         repeatCount = min(repeatCount, getMaxValueForUnit(newValue))
                     }
                 }
                 .padding(.vertical, 8)
+                
+                Picker("End Repeat", selection: $repeatEnds) {
+                    Text("None")
+                        .tag(false)
+                    Text("On Date")
+                        .tag(true)
+                }
+                
+                if repeatEnds {
+                    DatePicker("End Date", selection: $event.repeatUntil, in: event.date..., displayedComponents: .date)
+                }
             }
+            
+            Toggle("Notify 5 minutes before", isOn: $event.notify5MinutesBefore)
         }
         .navigationTitle(isNew ? "New Event" : "Edit Event")
         .toolbar {
-            ToolbarItem(placement: .confirmationAction) {
-                Button("Save") {
-                    // Save the repeat interval to your Event model
-                    if event.repeats {
-                        // You'll need to add properties to your Event model to store these values
-                        // event.repeatCount = repeatCount
-                        // event.repeatUnit = repeatUnit
+            if isNew {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                    validateAndDismiss()
                     }
-                    dismiss()
+                }
+                
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        context.delete(event)
+                        dismiss()
+                    }
+                }
+            } else {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        validateAndDismiss()
+                    } label: {
+                        HStack {
+                            Image(systemName: "chevron.left")
+                            Text("Events")
+                        }
+                    }
                 }
             }
+        }.alert("Name Required", isPresented: $showEmptyNameAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Please enter a name for your event.")
         }
+        .navigationBarBackButtonHidden(!isNew)
     }
     
     private func getMaxValueForUnit(_ unit: String) -> Int {
@@ -97,6 +127,14 @@ struct EventDetail: View {
     private func getRepeatCountRange() -> [Int] {
         let maxValue = getMaxValueForUnit(repeatUnit)
         return Array(1...maxValue)
+    }
+    
+    private func validateAndDismiss() {
+        if event.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            showEmptyNameAlert = true
+        } else {
+            dismiss()
+        }
     }
 }
 

@@ -42,7 +42,7 @@ struct EventList: View {
     }
     
     private func addEvent() {
-        let newEvent = Event(name: "New Event", date: .now, repeats: false)
+        let newEvent = Event(name: "", date: .now)
         context.insert(newEvent)
         self.newEvent = newEvent
     }
