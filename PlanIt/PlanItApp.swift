@@ -18,11 +18,11 @@ struct PlanItApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .onChange(of: scenePhase) { phase, _ in
-                    if phase == .active {
-                        NotificationManager.shared.refreshAllNotifications()
-                    }
-                }
+//                .onChange(of: scenePhase) { phase, _ in
+//                    if phase == .active {
+//                        NotificationManager.shared.refreshAllNotifications()
+//                    }
+//                }
         }
         .modelContainer(for: [Event.self])
     }

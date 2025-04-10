@@ -5,157 +5,148 @@
 //  Created by Sean Bremer on 4/10/25.
 //
 
-import Foundation
 import UserNotifications
-import BackgroundTasks
 
 class NotificationManager {
     static let shared = NotificationManager()
-    private let center = UNUserNotificationCenter.current()
-
-    private init() {
-        // Register the background task
-        BGTaskScheduler.shared.register(forTaskWithIdentifier: "com.planit.refreshNotifications", using: nil) { task in
-            self.handleBackgroundRefresh(task: task)
-        }
-    }
-
-    // Function to schedule notifications for events
-    func scheduleNotifications(for event: Event) {
-        removeNotifications(for: event)
-
-        let baseDates = upcomingOccurrences(for: event)
-        for date in baseDates {
-            scheduleNotifications(for: event, at: date)
-        }
-
-        // Schedule background task to refresh notifications in the future
-        scheduleBackgroundTask()
-    }
-
-    // Remove existing notifications
-    func removeNotifications(for event: Event) {
-        let identifiers = (0...5).flatMap { i in
-            upcomingOccurrences(for: event).map { occurrenceDate in
-                notificationIdentifier(for: event, date: occurrenceDate, offsetMinutes: i == 0 ? -5 : i - 1)
-            }
-        }
-        center.removePendingNotificationRequests(withIdentifiers: identifiers)
-    }
-
-    // Schedule notifications for a specific date
-    private func scheduleNotifications(for event: Event, at date: Date) {
-        let calendar = Calendar.current
-
-        // Notify 5 minutes before the event if enabled
-        if event.notify5MinutesBefore {
-            let beforeDate = calendar.date(byAdding: .minute, value: -5, to: date)!
-            scheduleNotification(event: event, date: beforeDate, offsetMinutes: -5)
-        }
-
-        // Notify at the event time and every minute after for 5 minutes
-        for minuteOffset in 0...5 {
-            let notifyDate = calendar.date(byAdding: .minute, value: minuteOffset, to: date)!
-            scheduleNotification(event: event, date: notifyDate, offsetMinutes: minuteOffset)
-        }
-    }
-
-    // Helper function to schedule an individual notification
-    private func scheduleNotification(event: Event, date: Date, offsetMinutes: Int) {
+    
+    private init() {}
+    
+    // This function schedules a notification for an event.
+    func scheduleNotification(for event: Event) {
+        // Create the notification content for the initial event
         let content = UNMutableNotificationContent()
-        content.title = event.name
-        content.body = offsetMinutes == -5
-            ? "\(event.name) in 5 minutes" :
-            offsetMinutes == 0 ? "\(event.name)" :
-            "\(event.name) \(offsetMinutes) minutes ago"
+        content.title = "Event Reminder"
+        content.body = event.name
         content.sound = .default
-
-        let trigger = UNCalendarNotificationTrigger(dateMatching: Calendar.current.dateComponents(
-            [.year, .month, .day, .hour, .minute],
-            from: date
-        ), repeats: false)
-
-        let request = UNNotificationRequest(
-            identifier: notificationIdentifier(for: event, date: date, offsetMinutes: offsetMinutes),
-            content: content,
-            trigger: trigger
-        )
-
-        center.add(request)
+        
+        // Create the notification trigger for the event time
+        let trigger = UNCalendarNotificationTrigger(dateMatching: getDateComponents(for: event.date), repeats: false)
+        
+        let request = UNNotificationRequest(identifier: event.id.uuidString, content: content, trigger: trigger)
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("Failed to schedule notification: \(error)")
+            }
+        }
+        
+        // If notify5MinutesBefore is true, schedule a notification 5 minutes before the event
+        if event.notify5MinutesBefore {
+            scheduleNotification5MinutesBefore(for: event)
+        }
+        
+        // Schedule notifications for 1 minute after the event time, up to 5 minutes after
+        scheduleNotificationsAfterEvent(for: event)
+        
+        // If the event repeats, schedule future notifications
+        if event.repeats {
+            scheduleRepeatingNotifications(for: event, startingAt: event.date)
+        }
     }
-
-    // Helper function to generate a unique identifier for the notification
-    private func notificationIdentifier(for event: Event, date: Date, offsetMinutes: Int) -> String {
-        let formatter = ISO8601DateFormatter()
-        return "\(event.id.uuidString)_\(formatter.string(from: date))_\(offsetMinutes)"
+    
+    // Schedules a notification 5 minutes before the event time
+    private func scheduleNotification5MinutesBefore(for event: Event) {
+        let content = UNMutableNotificationContent()
+        content.title = "Reminder: 5 minutes left"
+        content.body = event.name
+        content.sound = .default
+        
+        // 5 minutes before the event
+        let fiveMinutesBefore = event.date.addingTimeInterval(-5 * 60)
+        let trigger = UNCalendarNotificationTrigger(dateMatching: getDateComponents(for: fiveMinutesBefore), repeats: false)
+        
+        let request = UNNotificationRequest(identifier: "\(event.id.uuidString)_5minBefore", content: content, trigger: trigger)
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("Failed to schedule 5 minutes before notification: \(error)")
+            }
+        }
     }
-
-    // Get upcoming occurrences for a repeating event
-    private func upcomingOccurrences(for event: Event) -> [Date] {
-        var dates: [Date] = []
-
+    
+    // Schedules notifications at the time of and every minute after the event time
+    private func scheduleNotificationsAfterEvent(for event: Event) {
         let calendar = Calendar.current
-        var nextDate = event.date
-        let now = Date()
-        let endDate = event.repeatEnds ? event.repeatUntil : calendar.date(byAdding: .day, value: 30, to: now)!
-
-        while nextDate <= endDate {
-            if nextDate >= now {
-                dates.append(nextDate)
+        var nextTriggerDate = event.date
+        
+        // Schedule at the event time
+        let content = UNMutableNotificationContent()
+        content.title = "Event Started"
+        content.body = event.name
+        content.sound = .default
+        
+        let trigger = UNCalendarNotificationTrigger(dateMatching: getDateComponents(for: nextTriggerDate), repeats: false)
+        
+        let request = UNNotificationRequest(identifier: "\(event.id.uuidString)_atTime", content: content, trigger: trigger)
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("Failed to schedule at time notification: \(error)")
             }
-
-            // Calculate next occurrence based on repeat unit and count
-            var dateComponent = DateComponents()
-            switch event.repeatUnit {
-            case "days": dateComponent.day = event.repeatCount
-            case "weeks": dateComponent.day = event.repeatCount * 7
-            case "months": dateComponent.month = event.repeatCount
-            case "years": dateComponent.year = event.repeatCount
-            default: break
+        }
+        
+        // Schedule every minute for the next 5 minutes after the event time
+        for i in 1...5 {
+            let minuteAfterEvent = event.date.addingTimeInterval(Double(i * 60))
+            let contentAfterEvent = UNMutableNotificationContent()
+            contentAfterEvent.title = "Event Ongoing"
+            contentAfterEvent.body = event.name
+            contentAfterEvent.sound = .default
+            
+            let triggerAfterEvent = UNCalendarNotificationTrigger(dateMatching: getDateComponents(for: minuteAfterEvent), repeats: false)
+            
+            let requestAfterEvent = UNNotificationRequest(identifier: "\(event.id.uuidString)_minuteAfter_\(i)", content: contentAfterEvent, trigger: triggerAfterEvent)
+            UNUserNotificationCenter.current().add(requestAfterEvent) { error in
+                if let error = error {
+                    print("Failed to schedule minute after notification: \(error)")
+                }
             }
-
-            guard let updatedDate = calendar.date(byAdding: dateComponent, to: nextDate) else { break }
-            nextDate = updatedDate
-        }
-
-        return dates
-    }
-
-    // Schedule the background task for notification refresh
-    private func scheduleBackgroundTask() {
-        let request = BGProcessingTaskRequest(identifier: "com.planit.refreshNotifications")
-        request.earliestBeginDate = Date(timeIntervalSinceNow: 60 * 60 * 24 * 1) // 1 day from now
-        do {
-            try BGTaskScheduler.shared.submit(request)
-        } catch {
-            print("Failed to submit background task: \(error)")
         }
     }
-
-    // Handle the background task for refreshing notifications
-    private func handleBackgroundRefresh(task: BGTask) {
-        task.expirationHandler = {
-            task.setTaskCompleted(success: false)
+    
+    // Schedules repeating notifications for an event
+    private func scheduleRepeatingNotifications(for event: Event, startingAt startDate: Date) {
+        let calendar = Calendar.current
+        var nextTriggerDate = startDate
+        var repeatCount = event.repeatCount
+        
+        // Loop through future events based on recurrence
+        while (event.repeatEnds && repeatCount > 0) || !event.repeatEnds {
+            nextTriggerDate = getNextOccurrence(after: nextTriggerDate, repeatInterval: event.repeatCount)
+            
+            // Stop scheduling if we reach the repeatUntil date
+            if nextTriggerDate > event.repeatUntil {
+                break
+            }
+            
+            let content = UNMutableNotificationContent()
+            content.title = "Repeating Event Reminder"
+            content.body = event.name
+            content.sound = .default
+            
+            let trigger = UNCalendarNotificationTrigger(dateMatching: getDateComponents(for: nextTriggerDate), repeats: false)
+            
+            let request = UNNotificationRequest(identifier: "\(event.id.uuidString)_\(nextTriggerDate)", content: content, trigger: trigger)
+            UNUserNotificationCenter.current().add(request) { error in
+                if let error = error {
+                    print("Failed to schedule repeating notification: \(error)")
+                }
+            }
+            
+            // If repeatEnds is true, decrease repeatCount
+            if event.repeatEnds {
+                repeatCount -= 1
+            }
         }
-
-        // Perform the background refresh
-        refreshAllNotifications()
-
-        // Mark the background task as completed
-        task.setTaskCompleted(success: true)
     }
-
-    // Refresh all notifications for all events
-    func refreshAllNotifications() {
-        let events = getAllEvents() // Fetch your events from Core Data or your data source
-        for event in events {
-            scheduleNotifications(for: event)
-        }
+    
+    // Determine the next occurrence based on the repeat interval
+    private func getNextOccurrence(after date: Date, repeatInterval: Int) -> Date {
+        let calendar = Calendar.current
+        return calendar.date(byAdding: .day, value: repeatInterval, to: date)!
     }
-
-    // Get all events (replace with your actual data fetching logic)
-    private func getAllEvents() -> [Event] {
-        // Fetch events from Core Data or another data source
-        return [] // Return the actual events here
+    
+    // Converts a date to DateComponents
+    private func getDateComponents(for date: Date) -> DateComponents {
+        let calendar = Calendar.current
+        return calendar.dateComponents([.year, .month, .day, .hour, .minute], from: date)
     }
 }
