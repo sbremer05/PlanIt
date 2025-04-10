@@ -52,6 +52,5 @@ struct DayView: View {
         }
         .frame(maxWidth: .infinity)
         .frame(height: 55)
-        .padding(.vertical, 1)
     }
 }

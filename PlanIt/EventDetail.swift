@@ -19,8 +19,6 @@ struct EventDetail: View {
     
     private let repeatUnits = ["days", "weeks", "months", "years"]
     
-    @State private var repeatEnds: Bool = false
-    
     @State private var showEmptyNameAlert = false
     
     init(event: Event, isNew: Bool = false) {
@@ -65,14 +63,14 @@ struct EventDetail: View {
                 }
                 .padding(.vertical, 8)
                 
-                Picker("End Repeat", selection: $repeatEnds) {
+                Picker("End Repeat", selection: $event.repeatEnds) {
                     Text("None")
                         .tag(false)
                     Text("On Date")
                         .tag(true)
                 }
                 
-                if repeatEnds {
+                if event.repeatEnds {
                     DatePicker("End Date", selection: $event.repeatUntil, in: event.date..., displayedComponents: .date)
                 }
             }

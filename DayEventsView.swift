@@ -96,15 +96,23 @@ struct DayEventsView: View {
     }
 
     private func repeatText(for event: Event) -> String {
-        guard let count = event.repeatCount, let unit = event.repeatUnit else {
-            return "until \(shortDateFormatter.string(from: event.repeatUntil))"
+        // If event does not repeat, return an empty string
+        guard event.repeats else {
+            return ""
         }
 
-        if count == 1 {
-            return "every \(unit) until \(shortDateFormatter.string(from: event.repeatUntil))"
-        } else {
-            return "every \(count) \(unit)s until \(shortDateFormatter.string(from: event.repeatUntil))"
+        // Event repeats, so we handle it
+        guard let count = event.repeatCount, let unit = event.repeatUnit else {
+            return "" // No repeat count or unit, so nothing to show
         }
+
+        // If the event repeats indefinitely (no repeatUntil)
+        if event.repeatEnds == false {
+            return "Repeats every \(count) \(unit)s"  // "Repeats every 2 days", etc.
+        }
+        
+        // If the event has an end date
+        return "Repeats every \(count) \(unit)s until \(shortDateFormatter.string(from: event.repeatUntil))"
     }
 
     private var dateFormatter: DateFormatter = {
