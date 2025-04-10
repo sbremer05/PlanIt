@@ -9,18 +9,21 @@ import SwiftUI
 import SwiftData
 
 struct EventList: View {
-    @Query(sort: \Event.date) private var events: [Event]
+    @Query(sort: \Event.date) private var allEvents: [Event]
     @Environment(\.modelContext) private var context
     @State private var newEvent: Event?
+    @State private var nextOccurrences: [UUID: Date] = [:]
 
     var body: some View {
         NavigationStack {
             VStack {
-                if events.isEmpty {
+                let validEvents = getValidEvents(from: allEvents)
+                
+                if validEvents.isEmpty {
                     ContentUnavailableView("No Events", systemImage: "calendar.badge.exclamationmark")
                 } else {
                     List {
-                        ForEach(events) { event in
+                        ForEach(validEvents) { event in
                             NavigationLink {
                                 EventDetail(event: event)
                             } label: {
@@ -31,8 +34,22 @@ struct EventList: View {
                                         
                                         Spacer()
                                         
-                                        Text(formattedDate(event.date)) // Show formatted date
-                                            .foregroundColor(.secondary)
+                                        // Show original date or next occurrence
+                                        if let nextDate = nextOccurrences[event.id] {
+                                            Text(formattedDate(nextDate))
+                                                .foregroundColor(.secondary)
+                                        } else {
+                                            Text(formattedDate(event.date))
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+
+                                    // Show "Next occurrence" if the original date has passed
+                                    if let nextDate = nextOccurrences[event.id],
+                                       event.date < Date() {
+                                        Text("Next: \(formattedDate(nextDate))")
+                                            .font(.caption)
+                                            .foregroundColor(.blue)
                                     }
 
                                     // Repeat info (if applicable)
@@ -61,7 +78,7 @@ struct EventList: View {
                     }
                 }
             }
-            .navigationBarTitleDisplayMode(.inline) // No title at top
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(action: addEvent) {
@@ -75,6 +92,9 @@ struct EventList: View {
                 }
                 .interactiveDismissDisabled()
             }
+            .onAppear {
+                calculateNextOccurrences(for: allEvents)
+            }
         }
     }
 
@@ -85,10 +105,100 @@ struct EventList: View {
     }
 
     private func deleteEvents(at offsets: IndexSet) {
+        let validEvents = getValidEvents(from: allEvents)
         for index in offsets {
-            context.delete(events[index])
+            context.delete(validEvents[index])
         }
         try? context.save()
+    }
+
+    private func getValidEvents(from events: [Event]) -> [Event] {
+        return events.filter { event in
+            // Non-repeating events - show if date is in the future
+            if !event.repeats {
+                return event.date >= Date()
+            }
+            
+            // Repeating events - check if we have a next occurrence
+            if let _ = nextOccurrences[event.id] {
+                // If there's a next occurrence within valid period, include it
+                return true
+            }
+            
+            // Default case - include original events that haven't passed
+            return event.date >= Date()
+        }.sorted { first, second in
+            // Sort by next occurrence date or original date
+            let firstDate = nextOccurrences[first.id] ?? first.date
+            let secondDate = nextOccurrences[second.id] ?? second.date
+            return firstDate < secondDate
+        }
+    }
+
+    private func calculateNextOccurrences(for events: [Event]) {
+        let now = Date()
+        var updatedOccurrences: [UUID: Date] = [:]
+        
+        for event in events {
+            if event.repeats && event.date < now {
+                // Only calculate for repeating events that have already passed
+                if let nextDate = calculateNextOccurrence(for: event, after: now) {
+                    updatedOccurrences[event.id] = nextDate
+                }
+            }
+        }
+        
+        nextOccurrences = updatedOccurrences
+    }
+
+    private func calculateNextOccurrence(for event: Event, after date: Date) -> Date? {
+        let calendar = Calendar.current
+        let originalDate = event.date
+        
+        // If event doesn't repeat, there's no next occurrence
+        if !event.repeats {
+            return nil
+        }
+        
+        // If repeat has an end date and it's already passed, there's no next occurrence
+        if event.repeatEnds && event.repeatUntil < date {
+            return nil
+        }
+        
+        var nextDate = originalDate
+        let repeatCount = event.repeatCount
+        
+        // Keep adding repeat intervals until we find the next occurrence after the given date
+        while nextDate < date {
+            var dateComponents = DateComponents()
+            
+            switch event.repeatUnit {
+            case "days":
+                dateComponents.day = repeatCount
+            case "weeks":
+                dateComponents.day = repeatCount * 7
+            case "months":
+                dateComponents.month = repeatCount
+            case "years":
+                dateComponents.year = repeatCount
+            default:
+                dateComponents.day = repeatCount
+            }
+            
+            if let newDate = calendar.date(byAdding: dateComponents, to: nextDate) {
+                nextDate = newDate
+            } else {
+                // If calculation fails, break to avoid infinite loop
+                break
+            }
+            
+            // Check if we've gone beyond the repeat until date
+            if event.repeatEnds && nextDate > event.repeatUntil {
+                return nil
+            }
+        }
+        
+        return nextDate
     }
 
     private func formattedDate(_ date: Date) -> String {
@@ -155,7 +265,6 @@ struct EventList: View {
         return formatter
     }()
 }
-
 
 #Preview {
     EventList()

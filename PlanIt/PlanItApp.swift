@@ -9,6 +9,8 @@ import SwiftUI
 
 @main
 struct PlanItApp: App {
+    @Environment(\.scenePhase) private var scenePhase
+    
     init() {
         requestNotificationPermission()
     }
@@ -16,6 +18,11 @@ struct PlanItApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .onChange(of: scenePhase) { phase, _ in
+                    if phase == .active {
+                        NotificationManager.shared.refreshAllNotifications()
+                    }
+                }
         }
         .modelContainer(for: [Event.self])
     }
