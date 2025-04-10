@@ -6,6 +6,14 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		61E042772DA745AB0065DF21 /* MijickCalendarView in Frameworks */ = {isa = PBXBuildFile; productRef = 61E042762DA745AB0065DF21 /* MijickCalendarView */; };
+		61E0427A2DA747A20065DF21 /* MijickNavigationView in Frameworks */ = {isa = PBXBuildFile; productRef = 61E042792DA747A20065DF21 /* MijickNavigationView */; };
+		61E0427C2DA814BE0065DF21 /* DayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61E0427B2DA814BE0065DF21 /* DayView.swift */; };
+		61E0427E2DA815AA0065DF21 /* DayEventsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61E0427D2DA815AA0065DF21 /* DayEventsView.swift */; };
+		61E042802DA815D30065DF21 /* AddEventView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61E0427F2DA815D30065DF21 /* AddEventView.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		610BDB332DA0F5C10048EFA4 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +35,9 @@
 		610BDB252DA0F5C00048EFA4 /* PlanIt.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PlanIt.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		610BDB322DA0F5C10048EFA4 /* PlanItTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PlanItTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		610BDB3C2DA0F5C10048EFA4 /* PlanItUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PlanItUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		61E0427B2DA814BE0065DF21 /* DayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayView.swift; sourceTree = "<group>"; };
+		61E0427D2DA815AA0065DF21 /* DayEventsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayEventsView.swift; sourceTree = "<group>"; };
+		61E0427F2DA815D30065DF21 /* AddEventView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddEventView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -52,6 +63,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				61E0427A2DA747A20065DF21 /* MijickNavigationView in Frameworks */,
+				61E042772DA745AB0065DF21 /* MijickCalendarView in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -75,6 +88,9 @@
 		610BDB1C2DA0F5BF0048EFA4 = {
 			isa = PBXGroup;
 			children = (
+				61E0427B2DA814BE0065DF21 /* DayView.swift */,
+				61E0427D2DA815AA0065DF21 /* DayEventsView.swift */,
+				61E0427F2DA815D30065DF21 /* AddEventView.swift */,
 				610BDB272DA0F5C00048EFA4 /* PlanIt */,
 				610BDB352DA0F5C10048EFA4 /* PlanItTests */,
 				610BDB3F2DA0F5C10048EFA4 /* PlanItUITests */,
@@ -112,6 +128,8 @@
 			);
 			name = PlanIt;
 			packageProductDependencies = (
+				61E042762DA745AB0065DF21 /* MijickCalendarView */,
+				61E042792DA747A20065DF21 /* MijickNavigationView */,
 			);
 			productName = PlanIt;
 			productReference = 610BDB252DA0F5C00048EFA4 /* PlanIt.app */;
@@ -195,6 +213,10 @@
 			);
 			mainGroup = 610BDB1C2DA0F5BF0048EFA4;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				61E042752DA745AB0065DF21 /* XCRemoteSwiftPackageReference "CalendarView" */,
+				61E042782DA747A20065DF21 /* XCRemoteSwiftPackageReference "NavigationView" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 610BDB262DA0F5C00048EFA4 /* Products */;
 			projectDirPath = "";
@@ -236,6 +258,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				61E0427C2DA814BE0065DF21 /* DayView.swift in Sources */,
+				61E0427E2DA815AA0065DF21 /* DayEventsView.swift in Sources */,
+				61E042802DA815D30065DF21 /* AddEventView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -558,6 +583,38 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		61E042752DA745AB0065DF21 /* XCRemoteSwiftPackageReference "CalendarView" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Mijick/CalendarView";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
+		61E042782DA747A20065DF21 /* XCRemoteSwiftPackageReference "NavigationView" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Mijick/NavigationView";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.3;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		61E042762DA745AB0065DF21 /* MijickCalendarView */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 61E042752DA745AB0065DF21 /* XCRemoteSwiftPackageReference "CalendarView" */;
+			productName = MijickCalendarView;
+		};
+		61E042792DA747A20065DF21 /* MijickNavigationView */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 61E042782DA747A20065DF21 /* XCRemoteSwiftPackageReference "NavigationView" */;
+			productName = MijickNavigationView;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 610BDB1D2DA0F5BF0048EFA4 /* Project object */;
 }

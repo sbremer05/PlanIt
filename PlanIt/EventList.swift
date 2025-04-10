@@ -17,8 +17,17 @@ struct EventList: View {
         NavigationStack {
             List {
                 ForEach(events) { event in
-                    NavigationLink(event.name) {
+                    NavigationLink {
                         EventDetail(event: event)
+                    } label: {
+                        HStack {
+                            Text(event.name)
+                            
+                            Spacer()
+                            
+                            Text(formattedDate(event.date))
+                                .foregroundColor(.secondary)
+                        }
                     }
                 }
                 .onDelete(perform: deleteEvents(indexes:))
@@ -37,6 +46,7 @@ struct EventList: View {
                 NavigationStack {
                     EventDetail(event: event, isNew: true)
                 }
+                .interactiveDismissDisabled()
             }
         }
     }
@@ -52,6 +62,30 @@ struct EventList: View {
             context.delete(events[index])
         }
     }
+    
+    private func formattedDate(_ date: Date) -> String {
+        let calendar = Calendar.current
+        let now = Date()
+
+        if calendar.isDateInToday(date) {
+            return "Today, " + timeFormatter.string(from: date)
+        } else if calendar.isDateInTomorrow(date) {
+            return "Tomorrow, " + timeFormatter.string(from: date)
+        } else {
+            let eventYear = calendar.component(.year, from: date)
+            let currentYear = calendar.component(.year, from: now)
+            
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = eventYear == currentYear ? "MMM d, h:mm a" : "MMM d, yyyy, h:mm a"
+            return dateFormatter.string(from: date)
+        }
+    }
+
+    private var timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        return formatter
+    }()
 }
 
 #Preview {

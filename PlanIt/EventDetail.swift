@@ -32,7 +32,7 @@ struct EventDetail: View {
         Form {
             TextField("Event Name", text: $event.name)
             
-            DatePicker("Event Date", selection: $event.date, in: Date.now..., displayedComponents: .date)
+            DatePicker("Event Date", selection: $event.date, in: Date.now..., displayedComponents: [.date, .hourAndMinute])
             
             Toggle("Repeats", isOn: $event.repeats)
             

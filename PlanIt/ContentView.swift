@@ -12,9 +12,9 @@ struct ContentView: View {
         ZStack(alignment: .bottom) {
             TabView {
                 CalendarView()
-                    .tabItem {
-                        Label("Calendar", systemImage: "calendar")
-                    }
+                .tabItem {
+                    Label("Calendar", systemImage: "calendar")
+                }
                 EventList()
                     .tabItem {
                         Label("Events", systemImage: "tray.full.fill")
