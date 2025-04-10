@@ -94,7 +94,7 @@ struct DayEventsView: View {
     }
 
     private func addEvent() {
-        let event = Event(name: "", date: .now)
+        let event = Event(name: "", date: date)
         modelContext.insert(event)
         newEvent = event
     }

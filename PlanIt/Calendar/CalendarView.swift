@@ -45,30 +45,29 @@ struct CalendarView: View {
             }
             .padding(.horizontal)
 
-            ScrollView {
-                let days = daysInMonth()
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7)) {
-                    ForEach(days.indices, id: \.self) { i in
-                        let date = days[i]
-                        if let date = date {
-                            let dayEvents = eventsFor(date: date)
-                            DayView(
-                                date: date,
-                                isSelected: isSameDay(date, selectedDate),
-                                events: dayEvents
-                            )
-                            .onTapGesture {
-                                selectedDate = date
-                            }
-                        } else {
-                            Rectangle()
-                                .foregroundColor(.clear)
-                                .frame(height: 50)
+            let days = daysInMonth()
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7)) {
+                ForEach(days.indices, id: \.self) { i in
+                    let date = days[i]
+                    if let date = date {
+                        let dayEvents = eventsFor(date: date)
+                        DayView(
+                            date: date,
+                            isSelected: isSameDay(date, selectedDate),
+                            events: dayEvents
+                        )
+                        .onTapGesture {
+                            selectedDate = date
                         }
+                    } else {
+                        Rectangle()
+                            .foregroundColor(.clear)
+                            .frame(height: 50)
                     }
                 }
-                .padding(.horizontal)
             }
+            .padding(.horizontal)
+            .frame(height: UIScreen.main.bounds.width / 7 * 6)
 
             Divider()
 

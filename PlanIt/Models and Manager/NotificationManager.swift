@@ -38,7 +38,7 @@ class NotificationManager {
         // Schedule notifications for 1 minute after the event time, up to 5 minutes after
         scheduleNotificationsAfterEvent(for: event)
         
-        // If the event repeats, schedule future notifications
+        // If the event repeats indefinitely, schedule future notifications without a repeat count limit
         if event.repeats {
             scheduleRepeatingNotifications(for: event, startingAt: event.date)
         }
@@ -102,38 +102,32 @@ class NotificationManager {
         }
     }
     
-    // Schedules repeating notifications for an event
+    // Schedules repeating notifications for an event (infinite repeats)
     private func scheduleRepeatingNotifications(for event: Event, startingAt startDate: Date) {
-        let calendar = Calendar.current
         var nextTriggerDate = startDate
-        var repeatCount = event.repeatCount
         
-        // Loop through future events based on recurrence
-        while (event.repeatEnds && repeatCount > 0) || !event.repeatEnds {
+        // Handle infinite repeat (no end date, repeat indefinitely)
+        while true {
+            scheduleNotification(for: event, at: nextTriggerDate)
+            
+            // Calculate the next occurrence by adding the repeat interval
             nextTriggerDate = getNextOccurrence(after: nextTriggerDate, repeatInterval: event.repeatCount)
-            
-            // Stop scheduling if we reach the repeatUntil date
-            if nextTriggerDate > event.repeatUntil {
-                break
-            }
-            
-            let content = UNMutableNotificationContent()
-            content.title = "Repeating Event Reminder"
-            content.body = event.name
-            content.sound = .default
-            
-            let trigger = UNCalendarNotificationTrigger(dateMatching: getDateComponents(for: nextTriggerDate), repeats: false)
-            
-            let request = UNNotificationRequest(identifier: "\(event.id.uuidString)_\(nextTriggerDate)", content: content, trigger: trigger)
-            UNUserNotificationCenter.current().add(request) { error in
-                if let error = error {
-                    print("Failed to schedule repeating notification: \(error)")
-                }
-            }
-            
-            // If repeatEnds is true, decrease repeatCount
-            if event.repeatEnds {
-                repeatCount -= 1
+        }
+    }
+    
+    // Helper function for scheduling notifications at a specific date
+    private func scheduleNotification(for event: Event, at date: Date) {
+        let content = UNMutableNotificationContent()
+        content.title = "Repeating Event Reminder"
+        content.body = event.name
+        content.sound = .default
+        
+        let trigger = UNCalendarNotificationTrigger(dateMatching: getDateComponents(for: date), repeats: false)
+        
+        let request = UNNotificationRequest(identifier: "\(event.id.uuidString)_\(date)", content: content, trigger: trigger)
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("Failed to schedule repeating notification: \(error)")
             }
         }
     }
