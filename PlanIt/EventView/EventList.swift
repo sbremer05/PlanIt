@@ -106,11 +106,42 @@ struct EventList: View {
 
     private func deleteEvents(at offsets: IndexSet) {
         let validEvents = getValidEvents(from: allEvents)
+        
+        // Retrieve the event IDs for the events being deleted
+        let deletedEventIDs = offsets.compactMap { validEvents[$0].id }
+
+        // Delete events
         for index in offsets {
             context.delete(validEvents[index])
         }
+        
+        // Remove notifications related to the deleted events
+        removeNotifications(forEventIDs: deletedEventIDs)
+
+        // Save the context after deleting the events
         try? context.save()
     }
+
+    private func removeNotifications(forEventIDs eventIDs: [UUID]) {
+        let center = UNUserNotificationCenter.current()
+
+        // Remove notifications based on event IDs
+        center.getPendingNotificationRequests { requests in
+            let notificationsToRemove = requests.filter { request in
+                if let userInfo = request.content.userInfo as? [String: Any],
+                   let eventID = userInfo["eventID"] as? UUID,
+                   eventIDs.contains(eventID) {
+                    return true
+                }
+                return false
+            }
+
+            // Remove the matching notifications
+            let notificationIdentifiers = notificationsToRemove.map { $0.identifier }
+            center.removePendingNotificationRequests(withIdentifiers: notificationIdentifiers)
+        }
+    }
+
 
     private func getValidEvents(from events: [Event]) -> [Event] {
         return events.filter { event in
