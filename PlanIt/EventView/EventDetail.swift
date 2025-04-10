@@ -144,7 +144,7 @@ struct EventDetail: View {
         if event.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             showEmptyNameAlert = true
         } else {
-            NotificationManager.shared.scheduleNotification(for: event)
+            NotificationManager.shared.addNotifications(for: event)
             dismiss()
         }
     }

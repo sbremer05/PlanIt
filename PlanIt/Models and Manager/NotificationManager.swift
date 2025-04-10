@@ -9,138 +9,98 @@ import UserNotifications
 
 class NotificationManager {
     static let shared = NotificationManager()
-    
     private init() {}
-    
-    // This function schedules a notification for an event.
-    func scheduleNotification(for event: Event) {
-        // Create the notification content for the initial event
-        let content = UNMutableNotificationContent()
-        content.title = "Event Reminder"
-        content.body = event.name
-        content.sound = .default
-        
-        // Create the notification trigger for the event time
-        let trigger = UNCalendarNotificationTrigger(dateMatching: getDateComponents(for: event.date), repeats: false)
-        
-        let request = UNNotificationRequest(identifier: event.id.uuidString, content: content, trigger: trigger)
-        UNUserNotificationCenter.current().add(request) { error in
-            if let error = error {
-                print("Failed to schedule notification: \(error)")
+
+    func addNotifications(for event: Event) {
+        let calendar = Calendar.current
+        let now = Date()
+        let endDate = calendar.date(byAdding: .day, value: 14, to: now)!
+
+        var occurrenceDate = event.date
+
+        while occurrenceDate <= endDate {
+            if occurrenceDate >= now {
+                scheduleAllNotifications(for: event, at: occurrenceDate)
             }
+
+            guard event.repeats else { break }
+
+            if event.repeatEnds, occurrenceDate >= event.repeatUntil {
+                break
+            }
+
+            guard let nextDate = getNextOccurrence(after: occurrenceDate, event: event) else { break }
+            occurrenceDate = nextDate
         }
-        
-        // If notify5MinutesBefore is true, schedule a notification 5 minutes before the event
+    }
+
+    private func scheduleAllNotifications(for event: Event, at date: Date) {
+        let baseID = "\(event.id.uuidString)_\(date.timeIntervalSince1970)"
+
+        // 5 minutes before
         if event.notify5MinutesBefore {
-            scheduleNotification5MinutesBefore(for: event)
+            let fiveMinBefore = date.addingTimeInterval(-5 * 60)
+            scheduleNotification(
+                title: "Reminder: 5 minutes left",
+                body: event.name,
+                date: fiveMinBefore,
+                id: "\(baseID)_5min"
+            )
         }
-        
-        // Schedule notifications for 1 minute after the event time, up to 5 minutes after
-        scheduleNotificationsAfterEvent(for: event)
-        
-        // If the event repeats indefinitely, schedule future notifications without a repeat count limit
-        if event.repeats {
-            scheduleRepeatingNotifications(for: event, startingAt: event.date)
+
+        // At time and 1-5 mins after
+        for i in 0...5 {
+            let offsetDate = date.addingTimeInterval(Double(i * 60))
+            let title = i == 0 ? "Event Started" : "Event Ongoing"
+            let suffix = i == 0 ? "at" : "min_\(i)"
+            scheduleNotification(
+                title: title,
+                body: event.name,
+                date: offsetDate,
+                id: "\(baseID)_\(suffix)"
+            )
         }
     }
-    
-    // Schedules a notification 5 minutes before the event time
-    private func scheduleNotification5MinutesBefore(for event: Event) {
+
+    private func scheduleNotification(title: String, body: String, date: Date, id: String) {
         let content = UNMutableNotificationContent()
-        content.title = "Reminder: 5 minutes left"
-        content.body = event.name
+        content.title = title
+        content.body = body
         content.sound = .default
-        
-        // 5 minutes before the event
-        let fiveMinutesBefore = event.date.addingTimeInterval(-5 * 60)
-        let trigger = UNCalendarNotificationTrigger(dateMatching: getDateComponents(for: fiveMinutesBefore), repeats: false)
-        
-        let request = UNNotificationRequest(identifier: "\(event.id.uuidString)_5minBefore", content: content, trigger: trigger)
+
+        let trigger = UNCalendarNotificationTrigger(
+            dateMatching: getDateComponents(for: date),
+            repeats: false
+        )
+
+        let request = UNNotificationRequest(identifier: id, content: content, trigger: trigger)
+
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {
-                print("Failed to schedule 5 minutes before notification: \(error)")
+                print("Failed to schedule notification [\(id)]: \(error)")
             }
         }
     }
-    
-    // Schedules notifications at the time of and every minute after the event time
-    private func scheduleNotificationsAfterEvent(for event: Event) {
+
+    private func getNextOccurrence(after date: Date, event: Event) -> Date? {
         let calendar = Calendar.current
-        var nextTriggerDate = event.date
-        
-        // Schedule at the event time
-        let content = UNMutableNotificationContent()
-        content.title = "Event Started"
-        content.body = event.name
-        content.sound = .default
-        
-        let trigger = UNCalendarNotificationTrigger(dateMatching: getDateComponents(for: nextTriggerDate), repeats: false)
-        
-        let request = UNNotificationRequest(identifier: "\(event.id.uuidString)_atTime", content: content, trigger: trigger)
-        UNUserNotificationCenter.current().add(request) { error in
-            if let error = error {
-                print("Failed to schedule at time notification: \(error)")
-            }
-        }
-        
-        // Schedule every minute for the next 5 minutes after the event time
-        for i in 1...5 {
-            let minuteAfterEvent = event.date.addingTimeInterval(Double(i * 60))
-            let contentAfterEvent = UNMutableNotificationContent()
-            contentAfterEvent.title = "Event Ongoing"
-            contentAfterEvent.body = event.name
-            contentAfterEvent.sound = .default
-            
-            let triggerAfterEvent = UNCalendarNotificationTrigger(dateMatching: getDateComponents(for: minuteAfterEvent), repeats: false)
-            
-            let requestAfterEvent = UNNotificationRequest(identifier: "\(event.id.uuidString)_minuteAfter_\(i)", content: contentAfterEvent, trigger: triggerAfterEvent)
-            UNUserNotificationCenter.current().add(requestAfterEvent) { error in
-                if let error = error {
-                    print("Failed to schedule minute after notification: \(error)")
-                }
-            }
+        let count = event.repeatCount
+
+        switch event.repeatUnit {
+        case "days":
+            return calendar.date(byAdding: .day, value: count, to: date)
+        case "weeks":
+            return calendar.date(byAdding: .day, value: 7 * count, to: date)
+        case "months":
+            return calendar.date(byAdding: .month, value: count, to: date)
+        case "years":
+            return calendar.date(byAdding: .year, value: count, to: date)
+        default:
+            return nil
         }
     }
-    
-    // Schedules repeating notifications for an event (infinite repeats)
-    private func scheduleRepeatingNotifications(for event: Event, startingAt startDate: Date) {
-        var nextTriggerDate = startDate
-        
-        // Handle infinite repeat (no end date, repeat indefinitely)
-        while true {
-            scheduleNotification(for: event, at: nextTriggerDate)
-            
-            // Calculate the next occurrence by adding the repeat interval
-            nextTriggerDate = getNextOccurrence(after: nextTriggerDate, repeatInterval: event.repeatCount)
-        }
-    }
-    
-    // Helper function for scheduling notifications at a specific date
-    private func scheduleNotification(for event: Event, at date: Date) {
-        let content = UNMutableNotificationContent()
-        content.title = "Repeating Event Reminder"
-        content.body = event.name
-        content.sound = .default
-        
-        let trigger = UNCalendarNotificationTrigger(dateMatching: getDateComponents(for: date), repeats: false)
-        
-        let request = UNNotificationRequest(identifier: "\(event.id.uuidString)_\(date)", content: content, trigger: trigger)
-        UNUserNotificationCenter.current().add(request) { error in
-            if let error = error {
-                print("Failed to schedule repeating notification: \(error)")
-            }
-        }
-    }
-    
-    // Determine the next occurrence based on the repeat interval
-    private func getNextOccurrence(after date: Date, repeatInterval: Int) -> Date {
-        let calendar = Calendar.current
-        return calendar.date(byAdding: .day, value: repeatInterval, to: date)!
-    }
-    
-    // Converts a date to DateComponents
+
     private func getDateComponents(for date: Date) -> DateComponents {
-        let calendar = Calendar.current
-        return calendar.dateComponents([.year, .month, .day, .hour, .minute], from: date)
+        Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: date)
     }
 }
