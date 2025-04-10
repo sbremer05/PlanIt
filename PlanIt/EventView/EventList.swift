@@ -20,7 +20,7 @@ struct EventList: View {
                 let validEvents = getValidEvents(from: allEvents)
                 
                 if validEvents.isEmpty {
-                    ContentUnavailableView("No Events", systemImage: "calendar.badge.exclamationmark")
+                    ContentUnavailableView("No Future Events", systemImage: "calendar.badge.exclamationmark")
                 } else {
                     List {
                         ForEach(validEvents) { event in

@@ -25,10 +25,6 @@ struct DayEventsView: View {
     var body: some View {
         NavigationStack {
             VStack {
-                Text(dateFormatter.string(from: date))
-                    .font(.headline)
-                    .padding(.top)
-
                 if events.isEmpty {
                     ContentUnavailableView("No Events", systemImage: "calendar.badge.exclamationmark")
                 } else {
@@ -69,6 +65,7 @@ struct DayEventsView: View {
                     }
                 }
             }
+            .navigationTitle(dateFormatter.string(from: date))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
