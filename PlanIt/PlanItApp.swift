@@ -9,20 +9,16 @@ import SwiftUI
 
 @main
 struct PlanItApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @Environment(\.scenePhase) private var scenePhase
-    
+
     init() {
         requestNotificationPermission()
     }
-    
+
     var body: some Scene {
         WindowGroup {
             ContentView()
-//                .onChange(of: scenePhase) { phase, _ in
-//                    if phase == .active {
-//                        NotificationManager.shared.refreshAllNotifications()
-//                    }
-//                }
         }
         .modelContainer(for: [Event.self])
     }
@@ -31,6 +27,10 @@ struct PlanItApp: App {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
             if let error = error {
                 print("Error requesting notification permission: \(error)")
+            } else if granted {
+                print("Notification permission granted.")
+            } else {
+                print("Notification permission denied.")
             }
         }
     }

@@ -5,12 +5,49 @@
 //  Created by Sean Bremer on 4/10/25.
 //
 
+//  NotificationManager.swift
+//  PlanIt
+//
+//  Created by Sean Bremer on 4/10/25.
+//
+
+//  NotificationManager.swift
+//  PlanIt
+//
+//  Created by Sean Bremer on 4/10/25.
+//
+
+import SwiftUI
+import SwiftData
 import UserNotifications
 
 class NotificationManager {
+    @Query(sort: \Event.date) private var allEvents: [Event]
+    
     static let shared = NotificationManager()
     private init() {}
 
+    // This will update all notifications for events in the next 14 days
+    func updateNotifications() {
+        let events = getEventsWithinNext14Days()
+
+        // Loop through each event and update notifications
+        for event in events {
+            addNotifications(for: event)
+        }
+    }
+
+    private func getEventsWithinNext14Days() -> [Event] {
+        let calendar = Calendar.current
+        let today = Date()
+        let fourteenDaysLater = calendar.date(byAdding: .day, value: 14, to: today)!
+        
+        return allEvents.filter { event in
+            event.date >= today && event.date <= fourteenDaysLater
+        }
+    }
+
+    // Add notifications for a single event
     func addNotifications(for event: Event) {
         // Remove existing notifications for this specific event
         UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
@@ -33,17 +70,29 @@ class NotificationManager {
 
         var occurrenceDate = event.date
 
+        // Loop through every occurrence of the event within the next 14 days
         while occurrenceDate <= endDate {
+            // Schedule notifications only if the occurrence is not in the past
             if occurrenceDate >= now {
-                scheduleAllNotifications(for: event, at: occurrenceDate)
+                // If repeatEnds is true, consider repeatUntil
+                if event.repeatEnds {
+                    if occurrenceDate <= event.repeatUntil {
+                        scheduleAllNotifications(for: event, at: occurrenceDate)
+                    }
+                } else {
+                    scheduleAllNotifications(for: event, at: occurrenceDate)
+                }
             }
 
+            // If the event repeats, calculate the next occurrence
             guard event.repeats else { break }
 
+            // Check if the repeat ends before the repeatUntil date
             if event.repeatEnds, occurrenceDate >= event.repeatUntil {
                 break
             }
 
+            // Get the next occurrence date based on the repeat interval
             guard let nextDate = getNextOccurrence(after: occurrenceDate, event: event) else { break }
             occurrenceDate = nextDate
         }

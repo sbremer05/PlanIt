@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		614529042DA880F8005131E3 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 614529032DA880F8005131E3 /* AppDelegate.swift */; };
 		61E042772DA745AB0065DF21 /* MijickCalendarView in Frameworks */ = {isa = PBXBuildFile; productRef = 61E042762DA745AB0065DF21 /* MijickCalendarView */; };
 		61E0427A2DA747A20065DF21 /* MijickNavigationView in Frameworks */ = {isa = PBXBuildFile; productRef = 61E042792DA747A20065DF21 /* MijickNavigationView */; };
 /* End PBXBuildFile section */
@@ -33,7 +32,6 @@
 		610BDB252DA0F5C00048EFA4 /* PlanIt.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PlanIt.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		610BDB322DA0F5C10048EFA4 /* PlanItTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PlanItTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		610BDB3C2DA0F5C10048EFA4 /* PlanItUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PlanItUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		614529032DA880F8005131E3 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -97,7 +95,6 @@
 		610BDB1C2DA0F5BF0048EFA4 = {
 			isa = PBXGroup;
 			children = (
-				614529032DA880F8005131E3 /* AppDelegate.swift */,
 				610BDB272DA0F5C00048EFA4 /* PlanIt */,
 				610BDB352DA0F5C10048EFA4 /* PlanItTests */,
 				610BDB3F2DA0F5C10048EFA4 /* PlanItUITests */,
@@ -265,7 +262,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				614529042DA880F8005131E3 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
