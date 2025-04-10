@@ -111,7 +111,7 @@ struct CalendarView: View {
         eventsForDay.append(contentsOf: directEvents)
         
         // Find and add repeating events
-        let repeatingEvents = events.filter { $0.repeats && $0.date <= date && ( $0.repeatEnds || $0.repeatUntil >= date || $0.repeatEnds == false ) }
+        let repeatingEvents = events.filter { $0.repeats && $0.date <= date && ($0.repeatEnds == false || $0.repeatUntil >= date) }
         
         for event in repeatingEvents {
             // Skip if it's already included as a direct event
@@ -122,48 +122,45 @@ struct CalendarView: View {
             let repeatCount = event.repeatCount
             let repeatUnit = event.repeatUnit
             
-            let repeatInterval: Calendar.Component
+            // Calculate days between the event's start date and the target date
+            let daysBetween = calendar.dateComponents([.day], from: calendar.startOfDay(for: event.date), to: calendar.startOfDay(for: date)).day ?? 0
+            
+            // Handle different repetition types
             switch repeatUnit {
-            case "day": repeatInterval = .day
-            case "week": repeatInterval = .weekOfYear
-            case "month": repeatInterval = .month
-            case "year": repeatInterval = .year
-            default: continue
-            }
-            
-            // Check if this event repeats on the selected date
-            let components = calendar.dateComponents([.year, .month, .day, .weekday], from: event.date, to: date)
-            
-            switch repeatInterval {
-            case .day:
-                // For daily repeat, check if the number of days between is divisible by repeatCount
-                if let days = components.day, days % repeatCount == 0 {
+            case "days":
+                // Check if the days between is divisible by repeatCount
+                if daysBetween % repeatCount == 0 {
                     eventsForDay.append(event)
                 }
                 
-            case .weekOfYear:
-                // For weekly repeat, check if the number of weeks between is divisible by repeatCount
-                // and the weekday matches
-                if let weeks = components.weekOfYear, weeks % repeatCount == 0,
-                   calendar.component(.weekday, from: event.date) == calendar.component(.weekday, from: date) {
-                    eventsForDay.append(event)
+            case "weeks":
+                // For weekly repetition:
+                // 1. Check if the weekday matches
+                // 2. Check if the weeks between is divisible by repeatCount
+                if calendar.component(.weekday, from: event.date) == calendar.component(.weekday, from: date) {
+                    let weeksBetween = daysBetween / 7
+                    if weeksBetween % repeatCount == 0 {
+                        eventsForDay.append(event)
+                    }
                 }
                 
-            case .month:
-                // For monthly repeat, check if the number of months between is divisible by repeatCount
-                // and the day of month matches
-                if let months = components.month, months % repeatCount == 0,
+            case "months":
+                // For monthly repetition, check day of month and proper interval
+                if calendar.component(.day, from: event.date) == calendar.component(.day, from: date) {
+                    let monthsBetween = calendar.dateComponents([.month], from: event.date, to: date).month ?? 0
+                    if monthsBetween % repeatCount == 0 {
+                        eventsForDay.append(event)
+                    }
+                }
+                
+            case "years":
+                // For yearly repetition, check month and day, and proper interval
+                if calendar.component(.month, from: event.date) == calendar.component(.month, from: date),
                    calendar.component(.day, from: event.date) == calendar.component(.day, from: date) {
-                    eventsForDay.append(event)
-                }
-                
-            case .year:
-                // For yearly repeat, check if the number of years between is divisible by repeatCount
-                // and the month and day match
-                if let years = components.year, years % repeatCount == 0,
-                   calendar.component(.month, from: event.date) == calendar.component(.month, from: date),
-                   calendar.component(.day, from: event.date) == calendar.component(.day, from: date) {
-                    eventsForDay.append(event)
+                    let yearsBetween = calendar.dateComponents([.year], from: event.date, to: date).year ?? 0
+                    if yearsBetween % repeatCount == 0 {
+                        eventsForDay.append(event)
+                    }
                 }
                 
             default:
