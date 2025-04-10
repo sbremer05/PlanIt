@@ -10,6 +10,7 @@ import SwiftData
 
 @Model
 class Event {
+    var id : UUID
     var name: String
     var date: Date
     var repeats: Bool = false
@@ -20,6 +21,7 @@ class Event {
     var notify5MinutesBefore: Bool = false
     
     init(name: String, date: Date) {
+        self.id = UUID()
         self.name = name
         self.date = date
     }
