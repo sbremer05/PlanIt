@@ -13,8 +13,8 @@ class Event {
     var name: String
     var date: Date
     var repeats: Bool = false
-    var repeatCount: Int?
-    var repeatUnit: String?
+    var repeatCount: Int = 1
+    var repeatUnit: String = "days"
     var repeatEnds: Bool = false
     var repeatUntil: Date = Date.now
     var notify5MinutesBefore: Bool = false

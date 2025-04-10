@@ -119,9 +119,8 @@ struct CalendarView: View {
                 continue
             }
             
-            guard let repeatCount = event.repeatCount, let repeatUnit = event.repeatUnit else {
-                continue
-            }
+            let repeatCount = event.repeatCount
+            let repeatUnit = event.repeatUnit
             
             let repeatInterval: Calendar.Component
             switch repeatUnit {

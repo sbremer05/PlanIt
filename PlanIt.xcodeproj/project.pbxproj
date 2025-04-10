@@ -9,8 +9,6 @@
 /* Begin PBXBuildFile section */
 		61E042772DA745AB0065DF21 /* MijickCalendarView in Frameworks */ = {isa = PBXBuildFile; productRef = 61E042762DA745AB0065DF21 /* MijickCalendarView */; };
 		61E0427A2DA747A20065DF21 /* MijickNavigationView in Frameworks */ = {isa = PBXBuildFile; productRef = 61E042792DA747A20065DF21 /* MijickNavigationView */; };
-		61E0427C2DA814BE0065DF21 /* DayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61E0427B2DA814BE0065DF21 /* DayView.swift */; };
-		61E0427E2DA815AA0065DF21 /* DayEventsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61E0427D2DA815AA0065DF21 /* DayEventsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -34,8 +32,6 @@
 		610BDB252DA0F5C00048EFA4 /* PlanIt.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PlanIt.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		610BDB322DA0F5C10048EFA4 /* PlanItTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PlanItTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		610BDB3C2DA0F5C10048EFA4 /* PlanItUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PlanItUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		61E0427B2DA814BE0065DF21 /* DayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayView.swift; sourceTree = "<group>"; };
-		61E0427D2DA815AA0065DF21 /* DayEventsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayEventsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -86,8 +82,6 @@
 		610BDB1C2DA0F5BF0048EFA4 = {
 			isa = PBXGroup;
 			children = (
-				61E0427B2DA814BE0065DF21 /* DayView.swift */,
-				61E0427D2DA815AA0065DF21 /* DayEventsView.swift */,
 				610BDB272DA0F5C00048EFA4 /* PlanIt */,
 				610BDB352DA0F5C10048EFA4 /* PlanItTests */,
 				610BDB3F2DA0F5C10048EFA4 /* PlanItUITests */,
@@ -255,8 +249,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				61E0427C2DA814BE0065DF21 /* DayView.swift in Sources */,
-				61E0427E2DA815AA0065DF21 /* DayEventsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

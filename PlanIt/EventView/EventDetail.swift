@@ -14,12 +14,9 @@ struct EventDetail: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
     
-    @State private var repeatCount: Int = 1
-    @State private var repeatUnit: String = "weeks"
+    @State private var showEmptyNameAlert = false
     
     private let repeatUnits = ["days", "weeks", "months", "years"]
-    
-    @State private var showEmptyNameAlert = false
     
     init(event: Event, isNew: Bool = false) {
         self.event = event
@@ -40,7 +37,7 @@ struct EventDetail: View {
                     
                     Spacer()
                     
-                    Picker("Count", selection: $repeatCount) {
+                    Picker("Count", selection: $event.repeatCount) {
                         ForEach(getRepeatCountRange(), id: \.self) { value in
                             Text("\(value)").tag(value)
                         }
@@ -49,16 +46,16 @@ struct EventDetail: View {
                     .frame(width: 50)
                     .clipped()
                     
-                    Picker("Unit", selection: $repeatUnit) {
+                    Picker("Unit", selection: $event.repeatUnit) {
                         ForEach(repeatUnits, id: \.self) { unit in
-                            Text(unit).tag(unit)
+                            Text(formattedRepeatUnit(unit, count: event.repeatCount)).tag(unit)
                         }
                     }
                     .pickerStyle(.wheel)
                     .frame(width: 100)
                     .clipped()
-                    .onChange(of: repeatUnit) { _, newValue in
-                        repeatCount = min(repeatCount, getMaxValueForUnit(newValue))
+                    .onChange(of: event.repeatUnit) { _, newValue in
+                        event.repeatCount = min(event.repeatCount, getMaxValueForUnit(newValue))
                     }
                 }
                 .padding(.vertical, 8)
@@ -82,7 +79,7 @@ struct EventDetail: View {
             if isNew {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                    validateAndDismiss()
+                        validateAndDismiss()
                     }
                 }
                 
@@ -104,7 +101,8 @@ struct EventDetail: View {
                     }
                 }
             }
-        }.alert("Name Required", isPresented: $showEmptyNameAlert) {
+        }
+        .alert("Name Required", isPresented: $showEmptyNameAlert) {
             Button("OK", role: .cancel) {}
         } message: {
             Text("Please enter a name for your event.")
@@ -123,8 +121,23 @@ struct EventDetail: View {
     }
     
     private func getRepeatCountRange() -> [Int] {
-        let maxValue = getMaxValueForUnit(repeatUnit)
+        let maxValue = getMaxValueForUnit(event.repeatUnit)
         return Array(1...maxValue)
+    }
+    
+    private func formattedRepeatUnit(_ unit: String, count: Int) -> String {
+        switch unit {
+            case "days":
+                return count == 1 ? "day" : "days"
+            case "weeks":
+                return count == 1 ? "week" : "weeks"
+            case "months":
+                return count == 1 ? "month" : "months"
+            case "years":
+                return count == 1 ? "year" : "years"
+            default:
+                return unit
+        }
     }
     
     private func validateAndDismiss() {
