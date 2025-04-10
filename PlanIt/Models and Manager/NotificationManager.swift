@@ -12,6 +12,21 @@ class NotificationManager {
     private init() {}
 
     func addNotifications(for event: Event) {
+        // Remove existing notifications for this specific event
+        UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
+            let eventID = event.id.uuidString
+            let matchingIDs = requests
+                .map { $0.identifier }
+                .filter { $0.contains(eventID) }
+
+            UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: matchingIDs)
+
+            // Now schedule all relevant notifications
+            self.scheduleNotificationsForNext14Days(for: event)
+        }
+    }
+
+    private func scheduleNotificationsForNext14Days(for event: Event) {
         let calendar = Calendar.current
         let now = Date()
         let endDate = calendar.date(byAdding: .day, value: 14, to: now)!
@@ -41,22 +56,23 @@ class NotificationManager {
         if event.notify5MinutesBefore {
             let fiveMinBefore = date.addingTimeInterval(-5 * 60)
             scheduleNotification(
-                title: "Reminder: 5 minutes left",
-                body: event.name,
+                title: event.name,
+                body: "\(event.name) in 5 minutes",
                 date: fiveMinBefore,
-                id: "\(baseID)_5min"
+                id: "\(baseID)_5minBefore"
             )
         }
 
-        // At time and 1-5 mins after
+        // At time and 1-5 minutes after
         for i in 0...5 {
-            let offsetDate = date.addingTimeInterval(Double(i * 60))
-            let title = i == 0 ? "Event Started" : "Event Ongoing"
-            let suffix = i == 0 ? "at" : "min_\(i)"
+            let notificationDate = date.addingTimeInterval(Double(i * 60))
+            let title = event.name
+            let suffix = i == 0 ? "atTime" : "minAfter_\(i)"
+
             scheduleNotification(
                 title: title,
-                body: event.name,
-                date: offsetDate,
+                body: "\(event.name)" + (i == 0 ? "" : " \(i) minutes ago"),
+                date: notificationDate,
                 id: "\(baseID)_\(suffix)"
             )
         }
@@ -69,12 +85,11 @@ class NotificationManager {
         content.sound = .default
 
         let trigger = UNCalendarNotificationTrigger(
-            dateMatching: getDateComponents(for: date),
+            dateMatching: Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: date),
             repeats: false
         )
 
         let request = UNNotificationRequest(identifier: id, content: content, trigger: trigger)
-
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {
                 print("Failed to schedule notification [\(id)]: \(error)")
@@ -98,9 +113,5 @@ class NotificationManager {
         default:
             return nil
         }
-    }
-
-    private func getDateComponents(for date: Date) -> DateComponents {
-        Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: date)
     }
 }

@@ -141,7 +141,8 @@ struct EventDetail: View {
     }
     
     private func validateAndDismiss() {
-        if event.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        event.name = event.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        if event.name.isEmpty {
             showEmptyNameAlert = true
         } else {
             NotificationManager.shared.addNotifications(for: event)
