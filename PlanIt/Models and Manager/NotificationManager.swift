@@ -71,7 +71,7 @@ class NotificationManager {
 
             scheduleNotification(
                 title: title,
-                body: "\(event.name)" + (i == 0 ? "" : i + i == 1 ? " minute ago" : " minutes ago"),
+                body: "\(event.name)" + (i == 0 ? "" : " \(i)" + (i == 1 ? " minute ago" : " minutes ago")),
                 date: notificationDate,
                 id: "\(baseID)_\(suffix)"
             )
