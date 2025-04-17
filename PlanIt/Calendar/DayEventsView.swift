@@ -106,30 +106,10 @@ struct DayEventsView: View {
         }
         
         // Remove notifications related to the deleted events
-        removeNotifications(forEventIDs: deletedEventIDs)
+        NotificationManager.shared.removeNotifications(forEventIDs: deletedEventIDs)
 
         // Save the context after deleting the events
         try? context.save()
-    }
-
-    private func removeNotifications(forEventIDs eventIDs: [UUID]) {
-        let center = UNUserNotificationCenter.current()
-
-        // Remove notifications based on event IDs
-        center.getPendingNotificationRequests { requests in
-            let notificationsToRemove = requests.filter { request in
-                if let userInfo = request.content.userInfo as? [String: Any],
-                   let eventID = userInfo["eventID"] as? UUID,
-                   eventIDs.contains(eventID) {
-                    return true
-                }
-                return false
-            }
-
-            // Remove the matching notifications
-            let notificationIdentifiers = notificationsToRemove.map { $0.identifier }
-            center.removePendingNotificationRequests(withIdentifiers: notificationIdentifiers)
-        }
     }
 
     private func repeatText(for event: Event) -> String {
